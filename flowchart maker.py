@@ -72,7 +72,11 @@ class Arrow(svgwrite.path.Path):
         S_y = self.tail[1]
         E_x = self.head[0]
         E_y = self.head[1]
+        DeltaX = E_x - S_x
+        DeltaY = E_y - S_y
         self.length = math.sqrt((E_x-S_x)**2 + (E_y-S_y)**2)
+        #Arrow's angle with the x-axis
+        self.angle = math.atan2(DeltaY, DeltaX)
         if arrowHeadLength >= self.length or arrowHeadLength < 0:
             self.ahl = 0.1*self.length
         else:
@@ -81,32 +85,38 @@ class Arrow(svgwrite.path.Path):
             self.ahw = 2 * self.ahl / math.sqrt(3)
         else:
             self.ahw = arrowHeadWidth
-        
+        #These three variables make the math easier to read later
+        l = self.ahl
+        w = self.ahw/2
+        alpha = self.angle
+        beta = math.pi/2 + alpha
+        gamma = alpha - math.pi/2
         #solve for the arrowhead points
+        #(x_0, y_0) is the intersection of the base of the arrowhead and the \
+        #arrow
+        x_0 = E_x - l*math.cos(alpha)
+        y_0 = E_y - l*math.sin(alpha)
+        x_1 = x_0 + w*math.cos(beta)
+        y_1 = y_0 + w*math.sin(beta)
+        x_2 = x_0 + w*math.cos(gamma)
+        y_2 = y_0 + w*math.sin(gamma)
         
-        #C is the square of the hypotenuse of the right triangle formed between
-        # the tail of the arrow and one of the points of the arrow's head
-        C = (self.length-self.ahl)**2 + (self.ahw/2)**2
-        #D is the square of the hypotenuse of the right triangle formed between
-        # the tip of the arrow and one of the points of the arrow's head
-        D = self.ahl**2 + (self.ahw/2)**2
-        #F and G store complicated constant expressions to be used later
-        G = C - D - S_x**2 + E_x**2 - (E_y - S_y)**2
-        F = 4*(E_y - S_y)**2
-        #A, B, and C are the coefficients of the quadratic equation used to
-        # solve for the x-coordiates in the arrowhead points
-        second = 4*(S_x - E_x)**2 + F
-        first = 4*(S_x - E_x)*G - 2*E_x*F
-        zeroth = G**2 - F*(D + E_x**2)
-        #debug
-        print(second, first, zeroth)
-        (x_1, x_2) = quadratic_formula(second, first, zeroth)
-        #debug
-        print(x_1, x_2) 
-        y_1 = E_y + math.sqrt(D - (E_x-x_1)**2) #TODO: Figure out where this broke
-        y_2 = E_y - math.sqrt(D - (E_x-x_2)**2)
-        #debug
-        print(y_1, y_2)
+#        #A, B, and C are the coefficients of the quadratic equation used to
+#        # solve for the x-coordiates in the arrowhead points
+#        L = self.length
+#        A = 4*L**2
+#        B = -8*(E_x*L**2-2*L*l*DeltaX)
+#        C = 4*((E_x**2)*(L**2) - (DeltaY**2)*(l**2+w**2) - \
+#               2*L*l*E_x*DeltaX + (L**2)*(l**2))
+#        #debug
+#        print(A, B, C)
+#        (x_1, x_2) = quadratic_formula(A, B, C)
+#        #debug
+#        print(x_1, x_2) 
+#        y_1 = E_y + math.sqrt(l**2 + w**2 - (E_x-x_1)**2) #TODO: Figure out where this broke
+#        y_2 = E_y - math.sqrt(l**2 + w**2 - (E_x-x_2)**2)
+#        #debug
+#        print(y_1, y_2)
         #Start forming the path
         svgwrite.path.Path.__init__(self, d='M {0} {1}'.format(start[0], \
                                     start[1]), **extra)
@@ -163,10 +173,9 @@ diamondObj = Diamond( (ovalObj.cr[0]+padding, padding), \
                      **defaultFormat)
 dwg.add(diamondObj)
 
-arrowObj = Arrow( (padding, 2*padding+boxObj.h), \
-                 (3*padding+boxObj.w+ovalObj.w+diamondObj.w, 2*padding+2*boxObj.h), \
-                 20, 40 / math.sqrt(3), \
-                 **{'stroke': 'black', 'fill': 'black'})
+arrowObj = Arrow( (3*padding+boxObj.w+ovalObj.w+diamondObj.w, \
+                   2*padding+2*boxObj.h), (padding, 2*padding+boxObj.h), \
+20, 40 / math.sqrt(3), **{'stroke': 'black', 'fill': 'black'})
 dwg.add(arrowObj)
 
 dwg.save()
