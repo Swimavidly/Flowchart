@@ -74,6 +74,7 @@ class Arrow(svgwrite.path.Path):
         E_y = self.head[1]
         DeltaX = E_x - S_x
         DeltaY = E_y - S_y
+        #Arrow's total length
         self.length = math.sqrt((E_x-S_x)**2 + (E_y-S_y)**2)
         #Arrow's angle with the x-axis
         self.angle = math.atan2(DeltaY, DeltaX)
@@ -85,38 +86,25 @@ class Arrow(svgwrite.path.Path):
             self.ahw = 2 * self.ahl / math.sqrt(3)
         else:
             self.ahw = arrowHeadWidth
-        #These three variables make the math easier to read later
+        
+        #These variables make the math easier to read later
         l = self.ahl
         w = self.ahw/2
         alpha = self.angle
         beta = math.pi/2 + alpha
         gamma = alpha - math.pi/2
-        #solve for the arrowhead points
-        #(x_0, y_0) is the intersection of the base of the arrowhead and the \
-        #arrow
+        
+        #(x_0, y_0) is the intersection of the base of the arrowhead and the
+        # arrow.
         x_0 = E_x - l*math.cos(alpha)
         y_0 = E_y - l*math.sin(alpha)
+        
+        #solve for the arrowhead points
         x_1 = x_0 + w*math.cos(beta)
         y_1 = y_0 + w*math.sin(beta)
         x_2 = x_0 + w*math.cos(gamma)
         y_2 = y_0 + w*math.sin(gamma)
         
-#        #A, B, and C are the coefficients of the quadratic equation used to
-#        # solve for the x-coordiates in the arrowhead points
-#        L = self.length
-#        A = 4*L**2
-#        B = -8*(E_x*L**2-2*L*l*DeltaX)
-#        C = 4*((E_x**2)*(L**2) - (DeltaY**2)*(l**2+w**2) - \
-#               2*L*l*E_x*DeltaX + (L**2)*(l**2))
-#        #debug
-#        print(A, B, C)
-#        (x_1, x_2) = quadratic_formula(A, B, C)
-#        #debug
-#        print(x_1, x_2) 
-#        y_1 = E_y + math.sqrt(l**2 + w**2 - (E_x-x_1)**2) #TODO: Figure out where this broke
-#        y_2 = E_y - math.sqrt(l**2 + w**2 - (E_x-x_2)**2)
-#        #debug
-#        print(y_1, y_2)
         #Start forming the path
         svgwrite.path.Path.__init__(self, d='M {0} {1}'.format(start[0], \
                                     start[1]), **extra)
