@@ -37,4 +37,12 @@ arrowObj = svgflowchart.Arrow( (padding, 2*padding+boxObj.h), \
                               **{'stroke': 'black', 'fill': 'black'})
 dwg.add(arrowObj)
 
+base = boxObj.w
+height = boxObj.h
+triangleObj = svgflowchart.Triangle( (padding+base/2, 3*padding+boxObj.h), \
+                                    (padding+base, 3*padding+boxObj.h+height), \
+                                    (padding, 3*padding+boxObj.h+height), \
+                                    **defaultFormat )
+dwg.add(triangleObj)
+
 dwg.save()
