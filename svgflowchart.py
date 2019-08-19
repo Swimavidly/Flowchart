@@ -29,15 +29,37 @@ def distance_formula(pt1, pt2):
     # pt1 and pt2 are tuples of x-y coordinates
     return math.sqrt((pt1[0]-pt2[0])**2 + (pt1[1]-pt2[1])**2)
 
-# TODO: define a super class with methods that analyzes the verticies of a
-# shape and determines the maximum and minimum x and y coordinates of that
-# shape. Then other objects can reference the max & min x & y of the shape so
-# that the user can place new shapes outside of the bounding box of existing
-# shapes. Super class also needs to define the verticies...Use the Polygon class?
-
+# Each shape inherits shared variables and methods from the Shape class as well
+# as an svgwrite class.
+class Shape():
+    
+    def __init__(self, pts):
+        assertionErrorString = "Variable \"pts\" must be a list of tuples that are of length 2."
+        assert isinstance(pts, list), assertionErrorString
+        for pt in pts:
+            assert isinstance(pt, tuple), assertionErrorString
+            assert len(pt)==2, assertionErrorString
+        self.verticies = pts
+        self.maxX = self.maxMinXY()[0]
+        self.maxY = self.maxMinXY()[1]
+        self.minX = self.maxMinXY()[2]
+        self.minY = self.maxMinXY()[3]
+        
+    def maxMinXY(self):
+        xMax = self.verticies[0][0]
+        yMax = self.verticies[0][1]
+        xMin = xMax
+        yMin = yMax
+        for (x, y) in self.verticies[1:]:
+            if x > xMax : xMax = x
+            if x < xMin : xMin = x
+            if y > yMax : yMax = y
+            if y < yMin : yMin = y
+        return [xMax, yMax, xMin, yMin]
+    
 #Define shapes and drawing functions here
 # Square
-class Box(svgwrite.shapes.Rect):
+class Box(svgwrite.shapes.Rect, Shape):
     
     def __init__(self, insert=(0, 0), size=(1, 1), **extra):
         svgwrite.shapes.Rect.__init__(self, insert, size, None, None, \
@@ -55,9 +77,10 @@ class Box(svgwrite.shapes.Rect):
         self.cl = (self.bl[0], self.cc[1])
         self.cr = (self.br[0], self.cc[1])
         self.ct = (self.cc[0], self.tl[1])
+        Shape.__init__(self, [self.tl, self.tr, self.br, self.bl])
         
 # Diamond
-class Diamond(svgwrite.shapes.Polygon):
+class Diamond(svgwrite.shapes.Polygon, Shape):
     
     def __init__(self, insert=(0, 0), size=(1, 1), **extra):
         self.w = size[0] # width
@@ -69,11 +92,11 @@ class Diamond(svgwrite.shapes.Polygon):
         self.cl = (self.cc[0] - self.rx, self.cc[1])
         self.cr = (self.cc[0] + self.rx, self.cc[1])
         self.ct = (self.cc[0], self.cc[1] - self.ry)
-        self.verticies = [self.ct, self.cr, self.cb, self.cl]
+        Shape.__init__(self, [self.ct, self.cr, self.cb, self.cl])
         svgwrite.shapes.Polygon.__init__(self, self.verticies, **extra)
 
 # Ellipse
-class Oval(svgwrite.shapes.Ellipse):
+class Oval(svgwrite.shapes.Ellipse, Shape):
     
     def __init__(self, insert=None, center=None, r=None, **extra):
         if r == None and insert != None and center !=None:
@@ -105,17 +128,23 @@ class Oval(svgwrite.shapes.Ellipse):
         self.cl = (self.cc[0] - self.rx, self.cc[1])
         self.cr = (self.cc[0] + self.rx, self.cc[1])
         self.ct = (self.cc[0], self.cc[1] - self.ry)
+        Shape.__init__(self, [self.ct, self.cr, self.cb, self.cl])
 
 # Triangle
-class Triangle(svgwrite.shapes.Polygon):
+class Triangle(svgwrite.shapes.Polygon, Shape):
     
     def __init__(self, insert=(0, 0), vertex1=(0, 0), vertex2=(0, 0), **extra):
-        self.verticies = [insert, vertex1, vertex2]
+        Shape.__init__(self, [insert, vertex1, vertex2])
         svgwrite.shapes.Polygon.__init__(self, self.verticies, **extra)
+        # midpoint of the edge opposite the first vertex
+        midpoint = ( (vertex1[0]+vertex2[0])/2, (vertex1[1]+vertex2[1])/2 )
+        # centroid
+        self.cc = ( insert[0]+(2/3)*(midpoint[0]-insert[0]), \
+                   insert[1]+(2/3)*(midpoint[1]-insert[1]))
 
 # Arrow
-class Arrow(svgwrite.path.Path):
-    #TODO: Need to finish this class. Arrowhead should be a triangle.
+class Arrow(svgwrite.path.Path, Shape):
+
     def __init__(self, start=(0, 0), end=(0, 0), arrowHeadLength=10, \
                  arrowHeadWidth=10, **extra):
         
@@ -169,3 +198,5 @@ class Arrow(svgwrite.path.Path):
             self.push('L {0} {1}'.format(x_1, y_1))
             self.push('L {0} {1}'.format(x_2, y_2))
             self.push('Z')
+        
+        Shape.__init__(self, [self.tail, self.head, (x_1, y_1), (x_2, y_2)])

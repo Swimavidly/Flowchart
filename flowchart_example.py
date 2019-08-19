@@ -16,33 +16,35 @@ dwg = svgwrite.Drawing(filename=svgFile)
 #Put flowchart here
 padding = 10
 defaultFormat = {'stroke': 'black', 'fill': 'none'}
+blackFill = {'stroke': 'black', 'fill': 'black'}
 
 boxObj = svgflowchart.Box((padding, padding), (100, 100), **defaultFormat)
 dwg.add(boxObj)
 
-ovalObj = svgflowchart.Oval(insert=(2*padding+boxObj.w, padding), \
+ovalObj = svgflowchart.Oval(insert=(padding+boxObj.maxX, padding), \
                r=(boxObj.w, boxObj.ry), \
                **defaultFormat)
 dwg.add(ovalObj)
 
-diamondObj = svgflowchart.Diamond( (ovalObj.cr[0]+padding, padding), \
+diamondObj = svgflowchart.Diamond( (ovalObj.maxX+padding, padding), \
                      (ovalObj.w, ovalObj.h), \
                      **defaultFormat)
 dwg.add(diamondObj)
 
-arrowObj = svgflowchart.Arrow( (padding, 2*padding+boxObj.h), \
-                              (3*padding+boxObj.w+ovalObj.w+diamondObj.w, 2*padding+boxObj.h), \
+arrowObj = svgflowchart.Arrow( (padding, padding+boxObj.maxY), \
+                              (diamondObj.maxX, padding+boxObj.maxY), \
                               20, \
                               40 / math.sqrt(3), \
-                              **{'stroke': 'black', 'fill': 'black'})
+                              **blackFill)
 dwg.add(arrowObj)
 
 base = boxObj.w
 height = boxObj.h
-triangleObj = svgflowchart.Triangle( (padding+base/2, 3*padding+boxObj.h), \
-                                    (padding+base, 3*padding+boxObj.h+height), \
-                                    (padding, 3*padding+boxObj.h+height), \
+triangleObj = svgflowchart.Triangle( (padding+base/2, arrowObj.maxY), \
+                                    (padding+base, arrowObj.maxY+height), \
+                                    (padding, arrowObj.maxY+height), \
                                     **defaultFormat )
 dwg.add(triangleObj)
+dwg.add(svgwrite.shapes.Circle(triangleObj.cc, **blackFill)) #centroid
 
 dwg.save()
