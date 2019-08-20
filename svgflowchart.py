@@ -142,6 +142,24 @@ class Triangle(svgwrite.shapes.Polygon, Shape):
         self.cc = ( insert[0]+(2/3)*(midpoint[0]-insert[0]), \
                    insert[1]+(2/3)*(midpoint[1]-insert[1]))
 
+# Equilateral triangle
+class EquilateralTriangle(Triangle):
+    
+    def __init__(self, insert=(0, 0), vertex1=(0, 0), CW=True, **extra):
+        #These variables make the code easier to read
+        x_1 = insert[0]
+        y_1 = insert[1]
+        x_2 = vertex1[0]
+        y_2 = vertex1[1]
+        # By default, the triangle is drawn clockwise
+        if CW == True:
+            vertex2 = ( ( x_1 + x_2 + math.sqrt(3) * (y_1 - y_2) )/2, \
+                     ( y_1 + y_2 + math.sqrt(3) * (x_2 - x_1) )/2 )
+        else:
+            vertex2 = ( ( x_1 + x_2 - math.sqrt(3) * (y_1 - y_2) )/2, \
+                     ( y_1 + y_2 - math.sqrt(3) * (x_2 - x_1) )/2 )
+        Triangle.__init__(self, insert, vertex1, vertex2, **extra)
+
 # Arrow
 class Arrow(svgwrite.path.Path, Shape):
 

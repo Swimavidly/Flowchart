@@ -39,10 +39,9 @@ arrowObj = svgflowchart.Arrow( (padding, padding+boxObj.maxY), \
 dwg.add(arrowObj)
 
 base = boxObj.w
-height = boxObj.h
-triangleObj = svgflowchart.Triangle( (padding+base/2, arrowObj.maxY), \
+height = math.sqrt(3)/2 * boxObj.w
+triangleObj = svgflowchart.EquilateralTriangle( (padding+base/2, arrowObj.maxY), \
                                     (padding+base, arrowObj.maxY+height), \
-                                    (padding, arrowObj.maxY+height), \
                                     **defaultFormat )
 dwg.add(triangleObj)
 dwg.add(svgwrite.shapes.Circle(triangleObj.cc, **blackFill)) #centroid
