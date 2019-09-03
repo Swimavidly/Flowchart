@@ -8,6 +8,7 @@ Created on Fri Jul 12 10:22:52 2019
 import svgwrite
 import math
 import logging
+import re
 
 logger = logging.getLogger(__name__).addHandler(logging.NullHandler)
 
@@ -40,10 +41,11 @@ class Shape():
             assert isinstance(pt, tuple), assertionErrorString
             assert len(pt)==2, assertionErrorString
         self.verticies = pts
-        self.maxX = self.maxMinXY()[0]
-        self.maxY = self.maxMinXY()[1]
-        self.minX = self.maxMinXY()[2]
-        self.minY = self.maxMinXY()[3]
+        bb = self.maxMinXY()
+        self.maxX = bb[0]
+        self.maxY = bb[1]
+        self.minX = bb[2]
+        self.minY = bb[3]
         
     def maxMinXY(self):
         xMax = self.verticies[0][0]
@@ -58,7 +60,7 @@ class Shape():
         return [xMax, yMax, xMin, yMin]
     
 #Define shapes and drawing functions here
-# Square
+# Box
 class Box(svgwrite.shapes.Rect, Shape):
     
     def __init__(self, insert=(0, 0), size=(1, 1), **extra):
@@ -78,6 +80,23 @@ class Box(svgwrite.shapes.Rect, Shape):
         self.cr = (self.br[0], self.cc[1])
         self.ct = (self.cc[0], self.tl[1])
         Shape.__init__(self, [self.tl, self.tr, self.br, self.bl])
+
+# Box with text
+class BoxText(Box):
+    
+    #TODO: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/font-size
+    # http://xahlee.info/js/svg_font_size.html
+    #split text into lines and add tspan objexts inside a text objext
+    #Display warnings if there is too much text for the size of the box.
+    #Maybe shrink font size until all the text will fit in the box
+    #Add a buffer between the wall of the box and the text
+    
+    # I can't use the TextArea element because not all browsers support SVG 1.2
+    # Tiny. Therefore, I have to add text using the Text and TSpan elements.
+    def __init__(self, insert=(0, 0), size=(1, 1), text='', align='left', **extra):
+        Box.__init__(self, insert, size)
+        textObj = svgwrite.text.Text(text, insert) #need to work on this line
+        self.add(textObj)
         
 # Diamond
 class Diamond(svgwrite.shapes.Polygon, Shape):
