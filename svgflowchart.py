@@ -82,7 +82,7 @@ class Box(svgwrite.shapes.Rect, Shape):
         Shape.__init__(self, [self.tl, self.tr, self.br, self.bl])
 
 # Box with text
-class BoxText(Box):
+class BoxText(svgwrite.container.Group, Shape):
     
     #TODO: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/font-size
     # http://xahlee.info/js/svg_font_size.html
@@ -94,8 +94,15 @@ class BoxText(Box):
     # I can't use the TextArea element because not all browsers support SVG 1.2
     # Tiny. Therefore, I have to add text using the Text and TSpan elements.
     def __init__(self, insert=(0, 0), size=(1, 1), text='', align='left', **extra):
-        Box.__init__(self, insert, size)
+        svgwrite.container.Group.__init__(self, **extra)
+        boxObj = Box(insert, size)
         textObj = svgwrite.text.Text(text, insert) #need to work on this line
+        #Get font size
+        #determine line breaks
+        #Get one tspan element per line
+        #Manually set character distances based on align variable, longest line, and box width
+        #Align variable should support left, center, right, and justify
+        self.add(boxObj)
         self.add(textObj)
         
 # Diamond

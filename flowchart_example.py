@@ -46,4 +46,10 @@ triangleObj = svgflowchart.EquilateralTriangle( (padding+base/2, arrowObj.maxY),
 dwg.add(triangleObj)
 dwg.add(svgwrite.shapes.Circle(triangleObj.cc, **blackFill)) #centroid
 
+boxTextObj = svgflowchart.BoxText( (triangleObj.maxX+padding, triangleObj.minY), \
+                                  (boxObj.w, boxObj.h), \
+                                  'test', \
+                                  **defaultFormat)
+dwg.add(boxTextObj)
+
 dwg.save()
