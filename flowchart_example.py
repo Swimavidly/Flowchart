@@ -47,8 +47,11 @@ dwg.add(triangleObj)
 dwg.add(svgwrite.shapes.Circle(triangleObj.cc, **blackFill)) #centroid
 
 boxTextObj = svgflowchart.BoxText( (triangleObj.maxX+padding, triangleObj.minY), \
-                                  (boxObj.w, boxObj.h), \
-                                  'test', \
+                                  (boxObj.w * 2, boxObj.h), \
+                                  """This is a whole bunch of test text.
+Let's see where this goes!
+I hope it goes to Narnia.""", \
+                                  gap=1.6, \
                                   **defaultFormat)
 dwg.add(boxTextObj)
 

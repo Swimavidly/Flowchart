@@ -10,7 +10,8 @@ import math
 import logging
 import re
 
-logger = logging.getLogger(__name__).addHandler(logging.NullHandler)
+logger = logging.getLogger(__name__)
+#logger.addHandler(logging.NullHandler)
 
 def quadratic_formula(A, B, C):
 
@@ -81,30 +82,85 @@ class Box(svgwrite.shapes.Rect, Shape):
         self.ct = (self.cc[0], self.tl[1])
         Shape.__init__(self, [self.tl, self.tr, self.br, self.bl])
 
+def text_spacing(text, width, cWidth, align):
+    textLength = (len(text) + 1) * cWidth
+    remainingSpace = width - textLength
+    textAlignment = align[1]
+    offset = 0
+    if textAlignment=='l':
+        pass
+    elif textAlignment=='r':
+        offset = remainingSpace
+    elif textAlignment=='c':
+        offset = remainingSpace/2
+    elif textAlignment=='j':
+        textLength = width
+    else:
+        pass
+    return offset, textLength
+
 # Box with text
 class BoxText(svgwrite.container.Group, Shape):
-    
-    #TODO: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/font-size
-    # http://xahlee.info/js/svg_font_size.html
-    #split text into lines and add tspan objexts inside a text objext
-    #Display warnings if there is too much text for the size of the box.
-    #Maybe shrink font size until all the text will fit in the box
-    #Add a buffer between the wall of the box and the text
+    #   calculate maximum # of characters in one line
+    #       include a gap between wall and text
+    #   split text by carriage returns
+    #   for each line, check if the line is too long, and split it.
+    #   If there are too many lines, cut off the later lines and display a warning
+    #   Once the number of lines is known determine the coordinates for each line and character based on alignment
+    #   Create a Tspan object for each line and add it to the text object
     
     # I can't use the TextArea element because not all browsers support SVG 1.2
-    # Tiny. Therefore, I have to add text using the Text and TSpan elements.
-    def __init__(self, insert=(0, 0), size=(1, 1), text='', align='left', **extra):
+    # Tiny. Therefore, I have to add text using the Text and TSpan elements."""
+    def __init__(self, insert=(0, 0), size=(1, 1), text='', align='tl', \
+                 gap=0, characterWidthMultiplier=0.4, **extra):
+        #TODO: Fix the problem where formatting intended for the box is instead
+        #given to the text and the box.
+        assertionErrorText = "The align variable used in the BoxText class initialization must be a string of two characters."
+        assert isinstance(align, str), assertionErrorText
+        assert len(align) == 2, assertionErrorText
         svgwrite.container.Group.__init__(self, **extra)
         boxObj = Box(insert, size)
-        textObj = svgwrite.text.Text(text, insert) #need to work on this line
-        #Get font size
-        #determine line breaks
-        #Get one tspan element per line
-        #Manually set character distances based on align variable, longest line, and box width
-        #Align variable should support left, center, right, and justify
+        fontSize = 16 #The default font size in SVG
+        if 'font-size' in extra:
+            fontSize = int(extra['font-size'])
+        characterWidth = characterWidthMultiplier * fontSize
+        textWidth = boxObj.w - 2 * gap
+        maxChars = int( textWidth / characterWidth )
+        matchList = re.split(r'\n', text)
+        #if text ends in a newline, then remove the last line
+        if matchList[-1] == '' : matchList.pop(-1)
+        lineList = []
+        for line in matchList:
+            if len(line) > maxChars:
+                longline = line
+                while len(longline) > maxChars:
+                    lastSpaceIndex = longline.rfind(' ', 0, maxChars)
+                    shortLine = longline[0:lastSpaceIndex]
+                    longline = longline[lastSpaceIndex+1:]
+                    lineList.append(shortLine)
+                lineList.append(longline)
+            else:
+                lineList.append(line)
+        
+        textHeight = boxObj.h - 2 * gap
+        maxLines = int( textHeight / fontSize )
+        if len(lineList) > maxLines:
+            logger.warning('Text cannot fit inside box. Text will be truncated.')
+            lineList = lineList[0:maxLines]
+        
+        textStart = (insert[0]+gap, insert[1]+fontSize+gap)
+        textObj = svgwrite.text.Text('', textStart)
+        for index, line in enumerate(lineList):
+            (xStart, textLength) = text_spacing(line, textWidth, characterWidth, align)
+            tSpanObj = svgwrite.text.TSpan(line, \
+                                           (textStart[0], textStart[1] + index * fontSize), \
+                                           dx=[xStart] )
+            tSpanObj.update({'textLength' : str(textLength)})
+            textObj.add(tSpanObj)
+        
         self.add(boxObj)
         self.add(textObj)
-        
+
 # Diamond
 class Diamond(svgwrite.shapes.Polygon, Shape):
     
