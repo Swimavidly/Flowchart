@@ -51,6 +51,7 @@ boxTextObj = svgflowchart.BoxText( (triangleObj.maxX+padding, triangleObj.minY),
                                   """This is a whole bunch of test text.
 Let's see where this goes!
 I hope it goes to Narnia.""", \
+                                  align='cc', \
                                   gap=1.6, \
                                   **defaultFormat)
 dwg.add(boxTextObj)

@@ -85,15 +85,14 @@ class Box(svgwrite.shapes.Rect, Shape):
 def text_spacing(text, width, cWidth, align):
     textLength = (len(text) + 1) * cWidth
     remainingSpace = width - textLength
-    textAlignment = align[1]
     offset = 0
-    if textAlignment=='l':
+    if 'l' in align:
         pass
-    elif textAlignment=='r':
+    elif 'r' in align:
         offset = remainingSpace
-    elif textAlignment=='c':
+    elif 'c' == align[1]:
         offset = remainingSpace/2
-    elif textAlignment=='j':
+    elif 'j' in align:
         textLength = width
     else:
         pass
@@ -144,17 +143,36 @@ class BoxText(svgwrite.container.Group, Shape):
         
         textHeight = boxObj.h - 2 * gap
         maxLines = int( textHeight / fontSize )
+        textStart = (insert[0]+gap, insert[1]+fontSize+gap)
         if len(lineList) > maxLines:
             logger.warning('Text cannot fit inside box. Text will be truncated.')
             lineList = lineList[0:maxLines]
+        else:
+            # vertical alignment only matters if the number of lines is less
+            # than the maximumn number of lines.
+            if 't' in align:
+                # No change to textStart necessary
+                pass
+            elif 'm' in align or 'c' == align[0]:
+                textStart = \
+                (insert[0]+gap, \
+                 insert[1]+gap+fontSize*((maxLines-len(lineList))/2+1))
+            elif 'b' in align:
+                textStart = \
+                (insert[0]+gap, \
+                 insert[1]+gap+fontSize*((maxLines-len(lineList))+1))
+            else:
+                # Default to top-aligned text
+                pass
         
-        textStart = (insert[0]+gap, insert[1]+fontSize+gap)
         textObj = svgwrite.text.Text('', textStart)
         for index, line in enumerate(lineList):
-            (xStart, textLength) = text_spacing(line, textWidth, characterWidth, align)
-            tSpanObj = svgwrite.text.TSpan(line, \
-                                           (textStart[0], textStart[1] + index * fontSize), \
-                                           dx=[xStart] )
+            (xStart, textLength) = \
+            text_spacing(line, textWidth, characterWidth, align)
+            tSpanObj = \
+            svgwrite.text.TSpan(line, \
+                                (textStart[0], textStart[1]+index*fontSize), \
+                                dx=[xStart] )
             tSpanObj.update({'textLength' : str(textLength)})
             textObj.add(tSpanObj)
         
