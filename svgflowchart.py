@@ -12,6 +12,7 @@ import re
 
 logger = logging.getLogger(__name__)
 #logger.addHandler(logging.NullHandler)
+#logger.setLevel(logging.DEBUG)
 
 def quadratic_formula(A, B, C):
 
@@ -173,6 +174,10 @@ class BoxText(svgwrite.container.Group, Shape):
             svgwrite.text.TSpan(line, \
                                 (textStart[0], textStart[1]+index*fontSize), \
                                 dx=[xStart] )
+#            tSpanObj = \
+#            svgwrite.text.TSpan(line, \
+#                                dx=[xStart], \
+#                                dy=[index*fontSize])
             tSpanObj.update({'textLength' : str(textLength)})
             textObj.add(tSpanObj)
         
