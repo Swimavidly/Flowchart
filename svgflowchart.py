@@ -112,7 +112,8 @@ class BoxText(svgwrite.container.Group, Shape):
     # I can't use the TextArea element because not all browsers support SVG 1.2
     # Tiny. Therefore, I have to add text using the Text and TSpan elements."""
     def __init__(self, insert=(0, 0), size=(1, 1), text='', align='tl', \
-                 gap=0, characterWidthMultiplier=0.4, **extra):
+                 gap=0, characterWidthMultiplier=0.4, textExtra={}, \
+                 boxExtra={}, **extra):
         #TODO: Fix the problem where formatting intended for the box is instead
         #given to the text and the box.
         #TODO: Add functions to manipulate the three elements that make up the 
@@ -120,8 +121,10 @@ class BoxText(svgwrite.container.Group, Shape):
         assertionErrorText = "The align variable used in the BoxText class initialization must be a string of two characters."
         assert isinstance(align, str), assertionErrorText
         assert len(align) == 2, assertionErrorText
+        assert isinstance(textExtra, dict), "The textExtra variable must be a dictionary."
+        assert isinstance(boxExtra, dict), "The boxExtra variable must be a dictionary."
         svgwrite.container.Group.__init__(self, **extra)
-        boxObj = Box(insert, size)
+        boxObj = Box(insert, size, **boxExtra)
         fontSize = 16 #The default font size in SVG
         if 'font-size' in extra:
             fontSize = int(extra['font-size'])
@@ -168,7 +171,7 @@ class BoxText(svgwrite.container.Group, Shape):
                 # Default to top-aligned text
                 pass
         
-        textObj = svgwrite.text.Text('', textStart)
+        textObj = svgwrite.text.Text('', textStart, **textExtra)
         for index, line in enumerate(lineList):
             (xStart, textLength) = \
             text_spacing(line, textWidth, characterWidth, align)
