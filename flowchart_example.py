@@ -53,10 +53,12 @@ Let's see where this goes!
 I hope it goes to Narnia.""", \
                                   align='br', \
                                   gap=1.6, \
+                                  characterHeightAdjustment=5, \
+                                  textExtra = blackFill, \
                                   **defaultFormat)
-#adjust text up to avoid going over the bottom line of the square
-y = float(boxTextObj.elements[1].attribs['y'])
-boxTextObj.elements[1].update({'y': str(y*0.95)})
+#adjust text down to go over the bottom line of the square
+y = float(boxTextObj.textObj['y'])
+boxTextObj.textObj.update({'y': str(y+5)})
 dwg.add(boxTextObj)
 
 dwg.save()

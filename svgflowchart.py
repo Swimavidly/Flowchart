@@ -112,10 +112,9 @@ class BoxText(svgwrite.container.Group, Shape):
     # I can't use the TextArea element because not all browsers support SVG 1.2
     # Tiny. Therefore, I have to add text using the Text and TSpan elements."""
     def __init__(self, insert=(0, 0), size=(1, 1), text='', align='tl', \
-                 gap=0, characterWidthMultiplier=0.4, textExtra={}, \
-                 boxExtra={}, **extra):
-        #TODO: Fix the problem where formatting intended for the box is instead
-        #given to the text and the box.
+                 gap=0, characterWidthMultiplier=0.4, \
+                 characterHeightAdjustment=0, textExtra={}, boxExtra={}, \
+                 **extra):
         #TODO: Add functions to manipulate the three elements that make up the 
         #BoxText object so that the text can be fine-tuned
         assertionErrorText = "The align variable used in the BoxText class initialization must be a string of two characters."
@@ -124,12 +123,12 @@ class BoxText(svgwrite.container.Group, Shape):
         assert isinstance(textExtra, dict), "The textExtra variable must be a dictionary."
         assert isinstance(boxExtra, dict), "The boxExtra variable must be a dictionary."
         svgwrite.container.Group.__init__(self, **extra)
-        boxObj = Box(insert, size, **boxExtra)
+        self.boxObj = Box(insert, size, **boxExtra)
         fontSize = 16 #The default font size in SVG
         if 'font-size' in extra:
             fontSize = int(extra['font-size'])
         characterWidth = characterWidthMultiplier * fontSize
-        textWidth = boxObj.w - 2 * gap
+        textWidth = self.boxObj.w - 2 * gap
         maxChars = int( textWidth / characterWidth )
         matchList = re.split(r'\n', text)
         #if text ends in a newline, then remove the last line
@@ -147,9 +146,9 @@ class BoxText(svgwrite.container.Group, Shape):
             else:
                 lineList.append(line)
         
-        textHeight = boxObj.h - 2 * gap
+        textHeight = self.boxObj.h - 2 * gap
         maxLines = int( textHeight / fontSize )
-        textStart = (insert[0]+gap, insert[1]+gap)
+        textStart = (insert[0]+gap, insert[1]+gap-characterHeightAdjustment)
         if len(lineList) > maxLines:
             logger.warning('Text cannot fit inside box. Text will be truncated.')
             lineList = lineList[0:maxLines]
@@ -162,16 +161,16 @@ class BoxText(svgwrite.container.Group, Shape):
             elif 'm' in align or 'c' == align[0]:
                 textStart = \
                 (insert[0]+gap, \
-                 insert[1]+gap+fontSize*((maxLines-len(lineList))/2))
+                 insert[1]+gap+fontSize*((maxLines-len(lineList))/2)-characterHeightAdjustment)
             elif 'b' in align:
                 textStart = \
                 (insert[0]+gap, \
-                 insert[1]+gap+fontSize*((maxLines-len(lineList))))
+                 insert[1]+gap+fontSize*((maxLines-len(lineList)))-characterHeightAdjustment)
             else:
                 # Default to top-aligned text
                 pass
         
-        textObj = svgwrite.text.Text('', textStart, **textExtra)
+        self.textObj = svgwrite.text.Text('', textStart, **textExtra)
         for index, line in enumerate(lineList):
             (xStart, textLength) = \
             text_spacing(line, textWidth, characterWidth, align)
@@ -180,10 +179,10 @@ class BoxText(svgwrite.container.Group, Shape):
                                 x=[xStart+textStart[0]], \
                                 dy=[fontSize])
             tSpanObj.update({'textLength' : str(textLength)})
-            textObj.add(tSpanObj)
+            self.textObj.add(tSpanObj)
         
-        self.add(boxObj)
-        self.add(textObj)
+        self.add(self.boxObj)
+        self.add(self.textObj)
 
 # Diamond
 class Diamond(svgwrite.shapes.Polygon, Shape):
