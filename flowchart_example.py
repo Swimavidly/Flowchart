@@ -53,7 +53,7 @@ Let's see where this goes!
 I hope it goes to Narnia.""", \
                                   align='br', \
                                   gap=1.6, \
-                                  characterHeightAdjustment=5, \
+                                  descentMultiplier=0.33, \
                                   textExtra = blackFill, \
                                   **defaultFormat)
 #adjust text down to go over the bottom line of the square

@@ -110,13 +110,15 @@ class BoxText(svgwrite.container.Group, Shape):
     #   Create a Tspan object for each line and add it to the text object
     
     # I can't use the TextArea element because not all browsers support SVG 1.2
-    # Tiny. Therefore, I have to add text using the Text and TSpan elements."""
+    # Tiny. Therefore, I have to add text using the Text and TSpan elements.
     def __init__(self, insert=(0, 0), size=(1, 1), text='', align='tl', \
-                 gap=0, characterWidthMultiplier=0.4, \
-                 characterHeightAdjustment=0, textExtra={}, boxExtra={}, \
-                 **extra):
+                 gap=0, bodyMultiplier=0.4, descentMultiplier=0.3, \
+                 textExtra={}, boxExtra={}, **extra):
         #TODO: Add functions to manipulate the three elements that make up the 
         #BoxText object so that the text can be fine-tuned
+        #
+        #Useful explanation of fonts:
+        #https://stackoverflow.com/questions/25520410/when-setting-a-font-size-in-css-what-is-the-real-height-of-the-letters
         assertionErrorText = "The align variable used in the BoxText class initialization must be a string of two characters."
         assert isinstance(align, str), assertionErrorText
         assert len(align) == 2, assertionErrorText
@@ -125,11 +127,16 @@ class BoxText(svgwrite.container.Group, Shape):
         svgwrite.container.Group.__init__(self, **extra)
         self.boxObj = Box(insert, size, **boxExtra)
         fontSize = 16 #The default font size in SVG
-        if 'font-size' in extra:
+        if 'font-size' in textExtra:
+            #The font-size attribute defined on the text element supersedes the
+            #font-size attribute defined at the group level.
+            fontSize = int(textExtra['font-size'])
+        elif 'font-size' in extra:
             fontSize = int(extra['font-size'])
-        characterWidth = characterWidthMultiplier * fontSize
+        body = bodyMultiplier * fontSize
+        descent = descentMultiplier * fontSize
         textWidth = self.boxObj.w - 2 * gap
-        maxChars = int( textWidth / characterWidth )
+        maxChars = int( textWidth / body )
         matchList = re.split(r'\n', text)
         #if text ends in a newline, then remove the last line
         if matchList[-1] == '' : matchList.pop(-1)
@@ -148,7 +155,7 @@ class BoxText(svgwrite.container.Group, Shape):
         
         textHeight = self.boxObj.h - 2 * gap
         maxLines = int( textHeight / fontSize )
-        textStart = (insert[0]+gap, insert[1]+gap-characterHeightAdjustment)
+        textStart = (insert[0]+gap, insert[1]+gap-descent)
         if len(lineList) > maxLines:
             logger.warning('Text cannot fit inside box. Text will be truncated.')
             lineList = lineList[0:maxLines]
@@ -160,12 +167,12 @@ class BoxText(svgwrite.container.Group, Shape):
                 pass
             elif 'm' in align or 'c' == align[0]:
                 textStart = \
-                (insert[0]+gap, \
-                 insert[1]+gap+fontSize*((maxLines-len(lineList))/2)-characterHeightAdjustment)
+                (textStart[0], \
+                 textStart[1]+fontSize*((maxLines-len(lineList))/2))
             elif 'b' in align:
                 textStart = \
-                (insert[0]+gap, \
-                 insert[1]+gap+fontSize*((maxLines-len(lineList)))-characterHeightAdjustment)
+                (textStart[0], \
+                 textStart[1]+fontSize*(maxLines-len(lineList)))
             else:
                 # Default to top-aligned text
                 pass
@@ -173,7 +180,7 @@ class BoxText(svgwrite.container.Group, Shape):
         self.textObj = svgwrite.text.Text('', textStart, **textExtra)
         for index, line in enumerate(lineList):
             (xStart, textLength) = \
-            text_spacing(line, textWidth, characterWidth, align)
+            text_spacing(line, textWidth, body, align)
             tSpanObj = \
             svgwrite.text.TSpan(line, \
                                 x=[xStart+textStart[0]], \
