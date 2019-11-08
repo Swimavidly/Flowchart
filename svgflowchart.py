@@ -11,8 +11,7 @@ import logging
 import re
 
 logger = logging.getLogger(__name__)
-#logger.addHandler(logging.NullHandler)
-#logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.NullHandler)
 
 def quadratic_formula(A, B, C):
 
@@ -37,7 +36,7 @@ def distance_formula(pt1, pt2):
 class Shape():
     
     def __init__(self, pts):
-        assertionErrorString = "Variable \"pts\" must be a list of tuples that are of length 2."
+        assertionErrorString = "Variable, \"pts,\" must be a list of tuples that are of length 2."
         assert isinstance(pts, list), assertionErrorString
         for pt in pts:
             assert isinstance(pt, tuple), assertionErrorString
@@ -183,6 +182,44 @@ class BoxText(svgwrite.container.Group, Shape):
         
         self.add(self.boxObj)
         self.add(self.textObj)
+        
+    def moveText(self, direction, distance):
+        assert isinstance(direction, str), "Variable, \"direction,\" must be a string"
+        assert isinstance(distance, float) or isinstance(distance, int), \
+        "Variable, \"distance,\" must be a float or int"
+        
+        def moveTSpan( TSpan, dist):
+            oldX = float( TSpan.attribs['x'] )
+            newX = oldX+dist
+            TSpan.update( { 'x' : newX } )
+        
+        directDict = {'u' : 0, \
+                      'r' : 1, \
+                      'h' : 1, \
+                      'd' : 2, \
+                      'v' : 2, \
+                      'l' : 3 }
+        dirChar = direction[0].lower()
+        dirInt = directDict[dirChar]
+        oldInsert = ( float(self.textObj.attribs['x']), \
+                     float(self.textObj.attribs['y']) )
+        if dirInt == 0:
+            newInsert = (oldInsert[0], oldInsert[1]-distance)
+        elif dirInt == 1:
+            newInsert = (oldInsert[0]+distance, oldInsert[1])
+            for textSpan in self.textObj.elements:
+                moveTSpan(textSpan, distance)
+        elif dirInt == 2:
+            newInsert = (oldInsert[0], oldInsert[1]+distance)
+        elif dirInt == 3:
+            newInsert = (oldInsert[0]-distance, oldInsert[1])
+            for textSpan in self.textObj.elements:
+                moveTSpan( textSpan, -distance)
+        else:
+            newInsert = oldInsert
+            logger.warning('{0} is not a valid direction'.format(direction))
+        self.textObj.update( { 'x' : newInsert[0] } )
+        self.textObj.update( { 'y' : newInsert[1] } )
 
 # Diamond
 class Diamond(svgwrite.shapes.Polygon, Shape):
@@ -302,7 +339,7 @@ class Arrow(svgwrite.path.Path, Shape):
         gamma = alpha - math.pi/2
         
         #(x_0, y_0) is the intersection of the base of the arrowhead and the
-        # arrow.
+        # arrow's tail.
         x_0 = E_x - l*math.cos(alpha)
         y_0 = E_y - l*math.sin(alpha)
         

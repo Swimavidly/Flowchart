@@ -56,9 +56,10 @@ I hope it goes to Narnia.""", \
                                   characterHeightAdjustment=5, \
                                   textExtra = blackFill, \
                                   **defaultFormat)
-#adjust text down to go over the bottom line of the square
-y = float(boxTextObj.textObj['y'])
-boxTextObj.textObj.update({'y': str(y+5)})
+#adjust text and left
+boxTextObj.moveText('u', 10)
+boxTextObj.moveText('l', 10)
+
 dwg.add(boxTextObj)
 
 dwg.save()
