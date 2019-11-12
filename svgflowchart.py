@@ -114,7 +114,6 @@ class BoxText(svgwrite.container.Group, Shape):
                  gap=0, characterWidthMultiplier=0.4, \
                  characterHeightAdjustment=0, textExtra={}, boxExtra={}, \
                  **extra):
-        #TODO: Add functions to manipulate the three elements that make up the 
         #BoxText object so that the text can be fine-tuned
         assertionErrorText = "The align variable used in the BoxText class initialization must be a string of two characters."
         assert isinstance(align, str), assertionErrorText
@@ -123,6 +122,10 @@ class BoxText(svgwrite.container.Group, Shape):
         assert isinstance(boxExtra, dict), "The boxExtra variable must be a dictionary."
         svgwrite.container.Group.__init__(self, **extra)
         self.boxObj = Box(insert, size, **boxExtra)
+        Shape.__init__(self, [self.boxObj.tl, \
+                              self.boxObj.tr, \
+                              self.boxObj.br, \
+                              self.boxObj.bl])
         fontSize = 16 #The default font size in SVG
         if 'font-size' in extra:
             fontSize = int(extra['font-size'])
