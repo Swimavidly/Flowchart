@@ -363,3 +363,68 @@ class Arrow(svgwrite.path.Path, Shape):
             self.push('Z')
         
         Shape.__init__(self, [self.tail, self.head, (x_1, y_1), (x_2, y_2)])
+        
+class JointedArrow(svgwrite.path.Path, Shape):
+    
+    def __init__(self, start=(0, 0), end=(0, 0), arrowHeadLength=10, \
+                 arrowHeadWidth=10, flip=False, **extra):
+        #define the variables used to draw the arrow
+        self.tail = start
+        self.head = end
+        #These four variables make the math easier to read later
+        S_x = self.tail[0]
+        S_y = self.tail[1]
+        E_x = self.head[0]
+        E_y = self.head[1]
+        DeltaX = E_x - S_x
+        DeltaY = E_y - S_y
+        if flip:
+            #vertical first, horizontal second
+            self.joint = (S_x, E_y)
+        else:
+            #horizontal first, vertical second
+            self.joint = (E_x, S_y)
+            
+        #Arrow's total length
+        self.length = distance_formula(start, end)
+        #Arrow's angle with the x-axis
+        self.angle = math.atan2(DeltaY, DeltaX)
+        if arrowHeadLength >= self.length or arrowHeadLength < 0:
+            self.ahl = 0.1*self.length
+        else:
+            self.ahl = arrowHeadLength
+        if arrowHeadWidth >= self.ahl or arrowHeadWidth < 0:
+            self.ahw = 2 * self.ahl / math.sqrt(3)
+        else:
+            self.ahw = arrowHeadWidth
+        
+        #These variables make the math easier to read later
+        l = self.ahl
+        w = self.ahw/2
+        alpha = self.angle
+        beta = math.pi/2 + alpha
+        gamma = alpha - math.pi/2
+        
+        #(x_0, y_0) is the intersection of the base of the arrowhead and the
+        # arrow's tail.
+        x_0 = E_x - l*math.cos(alpha)
+        y_0 = E_y - l*math.sin(alpha)
+        
+        #solve for the arrowhead points
+        x_1 = x_0 + w*math.cos(beta)
+        y_1 = y_0 + w*math.sin(beta)
+        x_2 = x_0 + w*math.cos(gamma)
+        y_2 = y_0 + w*math.sin(gamma)
+        
+        #Start forming the path
+        svgwrite.path.Path.__init__(self, d='M {0} {1}'.format(start[0], \
+                                    start[1]), **extra)
+        self.push('L {0} {1}'.format(self.joint[0], self.joint[1]))
+        self.push('L {0} {1}'.format(end[0], end[1]))
+        #If the arrowhead length is 0, then the arrow is just two lines joined by a right angle
+        if self.ahl != 0:
+            self.push('M {0} {1}'.format(E_x, E_y)) #starts a subpath using absolute coordinates
+            self.push('L {0} {1}'.format(x_1, y_1))
+            self.push('L {0} {1}'.format(x_2, y_2))
+            self.push('Z')
+        Shape.__init__(self, [self.tail, self.head, self.joint, (x_1, y_1), (x_2, y_2)])
