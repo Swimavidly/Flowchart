@@ -64,7 +64,7 @@ dwg.add(boxTextObj)
 
 connector = svgflowchart.JointedArrow(start=diamondObj.cb, \
                                       end=boxTextObj.boxObj.cr, \
-                                          flip=True)
+                                          flip=True, **blackFill)
 dwg.add(connector)
 
 dwg.save(pretty=True)

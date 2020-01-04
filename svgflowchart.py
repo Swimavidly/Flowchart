@@ -364,10 +364,11 @@ class Arrow(svgwrite.path.Path, Shape):
         
         Shape.__init__(self, [self.tail, self.head, (x_1, y_1), (x_2, y_2)])
         
-class JointedArrow(svgwrite.path.Path, Shape):
+class JointedArrow(svgwrite.container.Group, Shape):
     
     def __init__(self, start=(0, 0), end=(0, 0), arrowHeadLength=10, \
                  arrowHeadWidth=10, flip=False, **extra):
+        svgwrite.container.Group.__init__(self, **extra)
         #define the variables used to draw the arrow
         self.tail = start
         self.head = end
@@ -376,6 +377,7 @@ class JointedArrow(svgwrite.path.Path, Shape):
         S_y = self.tail[1]
         E_x = self.head[0]
         E_y = self.head[1]
+        #These variables store the x and y change between the start and the end of the arrow.
         DeltaX = E_x - S_x
         DeltaY = E_y - S_y
             
@@ -418,17 +420,13 @@ class JointedArrow(svgwrite.path.Path, Shape):
             x_0 = E_x
             x_1 = x_0 - w
             x_2 = x_0 + w
-            y_1 = y_2 = y_0
+            y_2 = y_1 = y_0
         
-        #Start forming the path
-        svgwrite.path.Path.__init__(self, d='M {0} {1}'.format(start[0], \
-                                    start[1]), **extra)
-        self.push('L {0} {1}'.format(self.joint[0], self.joint[1]))
-        self.push('L {0} {1}'.format(end[0], end[1]))
-        #If the arrowhead length is 0, then the arrow is just two lines joined by a right angle
-        if self.ahl != 0:
-            self.push('M {0} {1}'.format(E_x, E_y)) #starts a subpath using absolute coordinates
-            self.push('L {0} {1}'.format(x_1, y_1))
-            self.push('L {0} {1}'.format(x_2, y_2))
-            self.push('Z')
-        Shape.__init__(self, [self.tail, self.head, self.joint, (x_1, y_1), (x_2, y_2)])
+        self.line1 = svgwrite.shapes.Line(self.tail, self.joint)
+        self.line2 = svgwrite.shapes.Line(self.joint, self.head)
+        self.arrowHead = Triangle( self.head, (x_1, y_1), (x_2, y_2) )
+        Shape.__init__(self, [self.tail, self.joint, self.head, (x_1, y_1), (x_2, y_2)])
+        
+        self.add(self.line1)
+        self.add(self.line2)
+        self.add(self.arrowHead)
