@@ -62,4 +62,9 @@ boxTextObj.moveText('l', 10)
 
 dwg.add(boxTextObj)
 
-dwg.save()
+connector = svgflowchart.JointedArrow(start=diamondObj.cb, \
+                                      end=boxTextObj.boxObj.cr, \
+                                          flip=True)
+dwg.add(connector)
+
+dwg.save(pretty=True)

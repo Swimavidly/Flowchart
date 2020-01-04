@@ -378,17 +378,10 @@ class JointedArrow(svgwrite.path.Path, Shape):
         E_y = self.head[1]
         DeltaX = E_x - S_x
         DeltaY = E_y - S_y
-        if flip:
-            #vertical first, horizontal second
-            self.joint = (S_x, E_y)
-        else:
-            #horizontal first, vertical second
-            self.joint = (E_x, S_y)
             
         #Arrow's total length
         self.length = distance_formula(start, end)
-        #Arrow's angle with the x-axis
-        self.angle = math.atan2(DeltaY, DeltaX)
+
         if arrowHeadLength >= self.length or arrowHeadLength < 0:
             self.ahl = 0.1*self.length
         else:
@@ -401,20 +394,31 @@ class JointedArrow(svgwrite.path.Path, Shape):
         #These variables make the math easier to read later
         l = self.ahl
         w = self.ahw/2
-        alpha = self.angle
-        beta = math.pi/2 + alpha
-        gamma = alpha - math.pi/2
         
         #(x_0, y_0) is the intersection of the base of the arrowhead and the
         # arrow's tail.
-        x_0 = E_x - l*math.cos(alpha)
-        y_0 = E_y - l*math.sin(alpha)
-        
-        #solve for the arrowhead points
-        x_1 = x_0 + w*math.cos(beta)
-        y_1 = y_0 + w*math.sin(beta)
-        x_2 = x_0 + w*math.cos(gamma)
-        y_2 = y_0 + w*math.sin(gamma)
+        if flip:
+            #vertical first, horizontal second
+            self.joint = (S_x, E_y)
+            if DeltaX > 0:
+                x_0 = E_x - l
+            else:
+                x_0 = E_x + l
+            y_0 = E_y
+            y_1 = y_0 - w
+            y_2 = y_0 + w
+            x_2 = x_1 = x_0
+        else:
+            #horizontal first, vertical second
+            self.joint = (E_x, S_y)
+            if DeltaY > 0:
+                y_0 = E_y - l
+            else:
+                y_0 = E_y + l
+            x_0 = E_x
+            x_1 = x_0 - w
+            x_2 = x_0 + w
+            y_1 = y_2 = y_0
         
         #Start forming the path
         svgwrite.path.Path.__init__(self, d='M {0} {1}'.format(start[0], \
