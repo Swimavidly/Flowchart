@@ -366,9 +366,11 @@ class Arrow(svgwrite.path.Path, Shape):
         
 class JointedArrow(svgwrite.container.Group, Shape):
     
-    def __init__(self, start=(0, 0), end=(0, 0), arrowHeadLength=10, \
-                 arrowHeadWidth=10, flip=False, **extra):
+    def __init__(self, start=(0, 0), end=(0, 0), arrowWidth=0, \
+                 arrowHeadLength=10, arrowHeadWidth=10, flip=False, **extra):
         svgwrite.container.Group.__init__(self, **extra)
+        assert arrowWidth >= 0, "Arrowhead width must be greater than or equal to 0."
+        
         #define the variables used to draw the arrow
         self.tail = start
         self.head = end
@@ -383,13 +385,16 @@ class JointedArrow(svgwrite.container.Group, Shape):
             
         #Arrow's total length
         self.length = distance_formula(start, end)
-
+        
+        #Set arrowhead length to a reasonable number if necessary
         if arrowHeadLength >= self.length or arrowHeadLength < 0:
             self.ahl = 0.1*self.length
         else:
             self.ahl = arrowHeadLength
-        if arrowHeadWidth >= self.ahl or arrowHeadWidth < 0:
-            self.ahw = 2 * self.ahl / math.sqrt(3)
+        
+        #Set arrowhead width to a reasonable number if necessary
+        if arrowHeadWidth <= arrowWidth:
+            self.ahw = 2 * arrowWidth
         else:
             self.ahw = arrowHeadWidth
         
