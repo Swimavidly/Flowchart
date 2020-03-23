@@ -369,7 +369,9 @@ class JointedArrow(svgwrite.container.Group, Shape):
     def __init__(self, start=(0, 0), end=(0, 0), arrowWidth=0, \
                  arrowHeadLength=10, arrowHeadWidth=10, flip=False, **extra):
         svgwrite.container.Group.__init__(self, **extra)
-        assert arrowWidth >= 0, "Arrowhead width must be greater than or equal to 0."
+        if arrowWidth < 0:
+            arrowWidth = 0
+            logger.info("Arrow width must be greater than or equal to 0. Setting it to 0.")
         
         #define the variables used to draw the arrow
         self.tail = start

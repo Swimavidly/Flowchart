@@ -7,7 +7,7 @@ Created on Thu Jul 25 13:27:15 2019
 import svgwrite
 import sys
 import math
-sys.path.append(r'C:\Users\avanfosson\Documents\Projects\PythonProjects\BetterGLE')
+sys.path.append(r'D:\Code Stuff\pythonProjects\flowchart')
 import svgflowchart
 
 svgFile = 'flowchart.svg'
