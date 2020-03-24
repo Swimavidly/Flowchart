@@ -364,14 +364,17 @@ class Arrow(svgwrite.path.Path, Shape):
         
         Shape.__init__(self, [self.tail, self.head, (x_1, y_1), (x_2, y_2)])
         
-class JointedArrow(svgwrite.container.Group, Shape):
+class JointedArrow(svgwrite.path.Path, Shape):
     
     def __init__(self, start=(0, 0), end=(0, 0), arrowWidth=0, \
                  arrowHeadLength=10, arrowHeadWidth=10, flip=False, **extra):
-        svgwrite.container.Group.__init__(self, **extra)
+        svgwrite.path.Path.__init__(self, d='M {0} {1}'.format(start[0], \
+                                    start[1]), **extra)
         if arrowWidth < 0:
-            arrowWidth = 0
+            self.aw = 0
             logger.info("Arrow width must be greater than or equal to 0. Setting it to 0.")
+        else:
+            self.aw = arrowWidth
         
         #define the variables used to draw the arrow
         self.tail = start
@@ -395,45 +398,116 @@ class JointedArrow(svgwrite.container.Group, Shape):
             self.ahl = arrowHeadLength
         
         #Set arrowhead width to a reasonable number if necessary
-        if arrowHeadWidth <= arrowWidth:
-            self.ahw = 2 * arrowWidth
+        if arrowHeadWidth <= self.aw:
+            if self.aw == 0:
+                self.ahw = 10
+            else:
+                self.ahw = 2 * self.aw
         else:
             self.ahw = arrowHeadWidth
         
         #These variables make the math easier to read later
-        l = self.ahl
-        w = self.ahw/2
+        w = self.aw/2
+        hl = self.ahl
+        hw = self.ahw/2
         
         #(x_0, y_0) is the intersection of the base of the arrowhead and the
         # arrow's tail.
         if flip:
             #vertical first, horizontal second
             self.joint = (S_x, E_y)
-            if DeltaX > 0:
-                x_0 = E_x - l
-            else:
-                x_0 = E_x + l
             y_0 = E_y
-            y_1 = y_0 - w
-            y_2 = y_0 + w
-            x_2 = x_1 = x_0
+            if DeltaX > 0:
+                x_0 = E_x - hl
+                if DeltaY > 0:
+                    #blue
+                    p1 = (S_x + w, S_y)
+                    p2 = (p1[0], y_0 - w)
+                    p3 = (x_0, p2[1])
+                    p4 = (x_0, y_0 - hw)
+                    p6 = (x_0, y_0 + hw)
+                    p7 = (x_0, y_0 + w)
+                    p8 = (S_x - w, p7[1])
+                else:
+                    #red
+                    p1 = (S_x - w, S_y)
+                    p2 = (p1[0], y_0 - w)
+                    p3 = (x_0, p2[1])
+                    p4 = (x_0, y_0 - hw)
+                    p6 = (x_0, y_0 + hw)
+                    p7 = (x_0, y_0 + w)
+                    p8 = (S_x + w, p7[1])
+            else:
+                x_0 = E_x + hl
+                if DeltaY > 0:
+                    #yellow
+                    p1 = (S_x + w, S_y)
+                    p2 = (p1[0], y_0 + w)
+                    p3 = (x_0, p2[1])
+                    p4 = (x_0, y_0 + hw)
+                    p6 = (x_0, y_0 - hw)
+                    p7 = (x_0, y_0 - w)
+                    p8 = (S_x - w, p7[1])
+                else:
+                    #black
+                    p1 = (S_x - w, S_y)
+                    p2 = (p1[0], y_0 + w)
+                    p3 = (x_0, p2[1])
+                    p4 = (x_0, y_0 + hw)
+                    p6 = (x_0, y_0 - hw)
+                    p7 = (x_0, y_0 - w)
+                    p8 = (S_x + w, p7[1])
+            p9 = (p8[0], S_y)
         else:
             #horizontal first, vertical second
             self.joint = (E_x, S_y)
-            if DeltaY > 0:
-                y_0 = E_y - l
-            else:
-                y_0 = E_y + l
             x_0 = E_x
-            x_1 = x_0 - w
-            x_2 = x_0 + w
-            y_2 = y_1 = y_0
+            if DeltaY > 0:
+                y_0 = E_y - hl
+                if DeltaX > 0:
+                    #purple
+                    p1 = (S_x, S_y - w)
+                    p2 = (x_0 + w, p1[1])
+                    p3 = (p2[0], y_0)
+                    p4 = (x_0 + hw, y_0)
+                    p6 = (x_0 - hw, y_0)
+                    p7 = (x_0 - w, y_0)
+                    p8 = (p7[0], S_y + w)
+                else:
+                    #green
+                    p1 = (S_x, S_y + w)
+                    p2 = (x_0 + w, p1[1])
+                    p3 = (p2[0], y_0)
+                    p4 = (x_0 + hw, y_0)
+                    p6 = (x_0 - hw, y_0)
+                    p7 = (x_0 - w, y_0)
+                    p8 = (p7[0], S_y - w)
+            else:
+                y_0 = E_y + hl
+                if DeltaX > 0:
+                    #orange
+                    p1 = (S_x, S_y - w)
+                    p2 = (x_0 - w, p1[1])
+                    p3 = (p2[0], y_0)
+                    p4 = (x_0 - hw, y_0)
+                    p6 = (x_0 + hw, y_0)
+                    p7 = (x_0 + w, y_0)
+                    p8 = (p7[0], S_y + w)
+                else:
+                    #white
+                    p1 = (S_x, S_y + w)
+                    p2 = (x_0 - w, p1[1])
+                    p3 = (p2[0], y_0)
+                    p4 = (x_0 - hw, y_0)
+                    p6 = (x_0 + hw, y_0)
+                    p7 = (x_0 + w, y_0)
+                    p8 = (p7[0], S_y - w)
+            p9 = (S_x, p8[1])
+
+        points = [p1, p2, p3, p4, self.head, p6, p7, p8, p9]
+        Shape.__init__(self, points)
         
-        self.line1 = svgwrite.shapes.Line(self.tail, self.joint)
-        self.line2 = svgwrite.shapes.Line(self.joint, self.head)
-        self.arrowHead = Triangle( self.head, (x_1, y_1), (x_2, y_2) )
-        Shape.__init__(self, [self.tail, self.joint, self.head, (x_1, y_1), (x_2, y_2)])
+        for point in points:
+            self.push('L {0} {1}'.format(point[0], point[1]))
+
         
-        self.add(self.line1)
-        self.add(self.line2)
-        self.add(self.arrowHead)
